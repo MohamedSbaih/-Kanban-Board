@@ -23,6 +23,38 @@ export default class kanbanAPI {
          return item;
     }
     
+    static updateItem(itemId, newProps) {
+		const data = read();
+		const [item, currentColumn] = (() => {
+			for (const column of data) {
+				const item = column.items.find(item => item.id == itemId);
+
+				if (item) {
+					return [item, column];
+				}
+			}
+		})();
+        if(!item){
+            throw new Error("Item not found");
+        }
+        item.content = newProps.content === undefined ? item.content : newProps.content;
+
+        // Update column and position 
+        if(newProps.columnId !== undefined
+            && newProps.position !== undefined){
+                const targetColumn = data.find(column.id == newProps.columnId);
+                if (!targetColumn) {
+                    throw new Error("Target column not found.");
+                }
+    
+                // Delete the item from it's current column
+                currentColumn.items.splice(currentColumn.items.indexOf(item), 1);
+    
+                // Move item into it's new column and position
+                targetColumn.items.splice(newProps.position, 0, item);
+            }
+            save(data);
+    }
 }
 
 function read(){
